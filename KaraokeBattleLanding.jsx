@@ -5,8 +5,9 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
  * Drop-in React component. Requires Tailwind CSS in the host project.
  * Fonts used: 'Playfair Display', 'Manrope'.
  *
- * Все изменяемые настройки — в объекте CONTACTS ниже.
- * Медиа (лого фонда, видео, фото) лежат в ./assets/**
+ * Все часто меняющиеся настройки — в объекте CONTACTS ниже.
+ * Фотогалереи сами подтягивают файлы из папок assets/photos и assets/venue
+ * (нужно соблюдать именование 01.jpg, 02.jpg и т.д.).
  */
 /* ---------- НАСТРОЙКИ, которые часто меняют ---------- */
     const CONTACTS = {
@@ -21,7 +22,11 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
       tgBotToken: "",
       tgChatId:   "",
     };
-    const PHOTOS = Array.from({ length: 21 }, (_, i) => `assets/photos/${String(i + 1).padStart(2, "0")}.jpg`);
+    /* Фотогалереи сами находят файлы в папках (01.jpg, 02.jpg, …). Чтобы
+       обновить галерею — положите новые JPG с таким же именованием в
+       assets/photos (прошлый батл) или assets/venue (ресторан Zoloto). */
+    const PHOTOS_FOLDER = "assets/photos";
+    const VENUE_FOLDER  = "assets/venue";
     const VIDEO_SRC    = "assets/video/karaoke-2024.mp4";
     const VIDEO_POSTER = "assets/video/poster.jpg";
 
@@ -47,12 +52,15 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
         <path d="M21.94 4.08 2.8 11.5c-1.04.4-1.03 1 .22 1.4l4.9 1.53 1.9 5.84c.22.64.11.9.79.9.52 0 .75-.25 1.04-.54.19-.18 1.3-1.27 2.54-2.48l5.09 3.77c.94.52 1.61.25 1.84-.87l3.33-15.7c.34-1.55-.41-2.12-1.51-1.27Zm-4.5 3.5-9.83 8.82-.39 4.13 2.05-6.24 8.5-7.54c.39-.33.44-.2.22.11Z"/>
       </svg>
     );
-    /* Логотип MAX-мессенджера — упрощённый значок */
-    const IconMax = (p) => (
-      <svg viewBox="0 0 24 24" fill="none" {...p}>
-        <rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" strokeWidth="1.6"/>
-        <path d="M7 16V8l3.3 5 1.7-2.6 1.7 2.6L17 8v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
+    /* Логотип MAX-мессенджера — реальный лого из файла */
+    const IconMax = ({ className = "", width, height, ...p }) => (
+      <img
+        src="assets/logo_max.jpg"
+        alt="MAX"
+        width={width} height={height}
+        className={`object-contain ${className}`}
+        {...p}
+      />
     );
     const IconArrow = (p) => (
       <svg viewBox="0 0 24 24" fill="none" {...p}>
@@ -133,6 +141,96 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
       return <span ref={ref}>{prefix}{val.toLocaleString("ru-RU")}{suffix}</span>;
     };
 
+    /* Автоматически собирает список фото из папки.
+       Достаточно класть файлы с именами 01.jpg, 02.jpg, 03.jpg и т.д.
+       Если какой-то номер пропущен — сканер остановится после 3 промахов подряд. */
+    const useAutoPhotos = (folder, hardMax = 99) => {
+      const [photos, setPhotos] = useState([]);
+      useEffect(() => {
+        let alive = true;
+        (async () => {
+          const found = [];
+          let misses = 0;
+          for (let i = 1; i <= hardMax; i++) {
+            const src = `${folder}/${String(i).padStart(2, "0")}.jpg`;
+            const ok = await new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(false);
+              img.src = src;
+            });
+            if (!alive) return;
+            if (ok) {
+              found.push(src);
+              misses = 0;
+              setPhotos(found.slice());
+            } else {
+              misses++;
+              if (misses >= 3) break;
+            }
+          }
+        })();
+        return () => { alive = false; };
+      }, [folder, hardMax]);
+      return photos;
+    };
+
+    /* Универсальный лайтбокс: показывает либо массив фото (с навигацией), либо видео. */
+    const Lightbox = ({ open, onClose, items, index, onIndex, videoSrc }) => {
+      useEffect(() => {
+        if (!open) return;
+        const onKey = (e) => {
+          if (e.key === "Escape") onClose();
+          if (items && items.length) {
+            if (e.key === "ArrowLeft")  onIndex((index - 1 + items.length) % items.length);
+            if (e.key === "ArrowRight") onIndex((index + 1) % items.length);
+          }
+        };
+        document.addEventListener("keydown", onKey);
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+          document.removeEventListener("keydown", onKey);
+          document.body.style.overflow = prevOverflow;
+        };
+      }, [open, items, index, onIndex, onClose]);
+      if (!open) return null;
+      const hasNav = items && items.length > 1;
+      return (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm grid place-items-center p-3 md:p-8" onClick={onClose}>
+          <button onClick={onClose} aria-label="Закрыть"
+                  className="absolute top-3 right-3 md:top-5 md:right-5 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center transition">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
+          <div className="relative max-w-[96vw] max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {videoSrc ? (
+              <video src={videoSrc} controls autoPlay playsInline preload="metadata"
+                     className="max-w-[96vw] max-h-[90vh] rounded-2xl bg-black" />
+            ) : (
+              <img src={items[index]} alt="" className="max-w-[96vw] max-h-[90vh] rounded-2xl object-contain select-none" />
+            )}
+          </div>
+          {hasNav && (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); onIndex((index - 1 + items.length) % items.length); }}
+                      aria-label="Предыдущее"
+                      className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center transition">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); onIndex((index + 1) % items.length); }}
+                      aria-label="Следующее"
+                      className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center transition">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-xs tracking-[0.25em] uppercase text-white/60">
+                {String(index + 1).padStart(2, "0")} / {String(items.length).padStart(2, "0")}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    };
+
     /* ---------- NAV ---------- */
     const Nav = () => {
       const [open, setOpen] = useState(false);
@@ -147,6 +245,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
         { href: "#tariffs",   label: "Тарифы" },
         { href: "#programme", label: "Программа" },
         { href: "#gallery",   label: "Как было" },
+        { href: "#venue",     label: "Место" },
         { href: "#team",      label: "Команда" },
         { href: "#faq",       label: "FAQ" },
         { href: "#booking",   label: "Бронь" },
@@ -465,23 +564,82 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
       );
     };
 
-    /* ---------- ГАЛЕРЕЯ (видео + фото прошлого батла) ---------- */
-    const Gallery = () => {
-      const videoRef = useRef(null);
+    /* Переиспользуемая горизонтальная фотокарусель с лайтбоксом. */
+    const PhotoStrip = ({ photos, aspect = "aspect-[3/2]", width = "landscape", caption }) => {
       const scrollerRef = useRef(null);
-      const [playing, setPlaying] = useState(false);
-
-      const togglePlay = () => {
-        const v = videoRef.current;
-        if (!v) return;
-        if (v.paused) { v.play(); setPlaying(true); } else { v.pause(); setPlaying(false); }
-      };
+      const [lbIdx, setLbIdx] = useState(-1);
       const scrollBy = (dir) => {
         const el = scrollerRef.current;
         if (!el) return;
-        const amount = Math.round(el.clientWidth * 0.85) * dir;
-        el.scrollBy({ left: amount, behavior: "smooth" });
+        el.scrollBy({ left: Math.round(el.clientWidth * 0.85) * dir, behavior: "smooth" });
       };
+      const widthCls =
+        width === "portrait"
+          ? "w-[70%] sm:w-[44%] md:w-[30%] lg:w-[23%]"
+          : "w-[86%] sm:w-[60%] md:w-[45%] lg:w-[36%]";
+
+      if (!photos.length) {
+        return <div className="py-10 text-center text-white/40 text-sm">Загружаем фотохронику…</div>;
+      }
+      return (
+        <div className="relative">
+          <div className="flex items-end justify-between mb-5">
+            <div>
+              <div className="text-[11px] tracking-[0.3em] uppercase text-[#F4D47A]/80">Фотохроника</div>
+              <div className="mt-1 text-2xl md:text-3xl text-white" style={{ fontFamily: brand.serif }}>{caption}</div>
+            </div>
+            <div className="hidden md:flex items-center gap-2">
+              <button onClick={() => scrollBy(-1)} aria-label="Предыдущие"
+                      className="w-11 h-11 rounded-full border border-white/15 text-white/80 hover:text-white hover:border-white/35 transition grid place-items-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <button onClick={() => scrollBy(1)} aria-label="Следующие"
+                      className="w-11 h-11 rounded-full border border-white/15 text-white/80 hover:text-white hover:border-white/35 transition grid place-items-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+            </div>
+          </div>
+
+          <div ref={scrollerRef}
+               className="no-scrollbar flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-5 px-5 md:-mx-0 md:px-0">
+            {photos.map((src, i) => (
+              <figure key={src}
+                      onClick={() => setLbIdx(i)}
+                      className={`group shrink-0 snap-start relative overflow-hidden rounded-3xl border border-white/10 bg-[#141416] cursor-zoom-in ${widthCls} ${aspect}`}>
+                <img src={src} alt={`Кадр ${i + 1}`} loading="lazy" decoding="async"
+                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent opacity-80" />
+                <span className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur border border-white/10 grid place-items-center opacity-0 group-hover:opacity-100 transition">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15zM8 10.5h5M10.5 8v5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                </span>
+                <figcaption className="absolute left-4 bottom-3 text-[11px] tracking-[0.25em] uppercase text-white/70">
+                  #{String(i + 1).padStart(2, "0")}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          <div className="flex md:hidden items-center justify-center gap-3 mt-3">
+            <button onClick={() => scrollBy(-1)} aria-label="Назад"
+                    className="w-10 h-10 rounded-full border border-white/15 text-white/80 grid place-items-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <button onClick={() => scrollBy(1)} aria-label="Вперёд"
+                    className="w-10 h-10 rounded-full border border-white/15 text-white/80 grid place-items-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          </div>
+
+          <Lightbox open={lbIdx >= 0} items={photos} index={Math.max(0, lbIdx)}
+                    onIndex={setLbIdx} onClose={() => setLbIdx(-1)} />
+        </div>
+      );
+    };
+
+    /* ---------- ГАЛЕРЕЯ (видео + фото прошлого батла) ---------- */
+    const Gallery = () => {
+      const photos = useAutoPhotos(PHOTOS_FOLDER);
+      const [videoOpen, setVideoOpen] = useState(false);
 
       return (
         <section id="gallery" className="relative py-20 md:py-28">
@@ -490,88 +648,72 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
               title={<>Караоке Батл <GradientText>в прошлый раз</GradientText></>}
               lead="Один вечер, 204 000 ₽ в фонд, сотни улыбок и ни одной фальшивой ноты (точнее, ни одной запомнившейся)." />
 
-            {/* видео */}
+            {/* видео — горизонтальная заставка, а по клику открывается в нативном вертикальном формате */}
             <Reveal>
-              <div className="relative mx-auto max-w-4xl aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black shadow-[0_40px_100px_-30px_rgba(0,0,0,0.8)]">
-                <video
-                  ref={videoRef}
-                  src={VIDEO_SRC}
-                  poster={VIDEO_POSTER}
-                  playsInline
-                  preload="metadata"
-                  controls={playing}
-                  onPlay={() => setPlaying(true)}
-                  onPause={() => setPlaying(false)}
-                  onEnded={() => setPlaying(false)}
-                  className="w-full h-full object-cover"
-                />
-                {!playing && (
-                  <button onClick={togglePlay}
-                          aria-label="Смотреть видео"
-                          className="absolute inset-0 grid place-items-center group">
-                    <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                    <span className="relative w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/10 backdrop-blur border border-white/20 grid place-items-center group-hover:scale-105 transition-transform">
-                      <span className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E11D48] to-[#9C1B3B] opacity-70 blur-lg" />
-                      <svg width="34" height="34" viewBox="0 0 24 24" fill="white" className="relative translate-x-0.5">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </span>
-                    <span className="absolute bottom-5 left-5 right-5 md:left-6 md:bottom-6 text-left">
-                      <span className="block text-[11px] tracking-[0.3em] uppercase text-[#F4D47A]/80">Караоке Батл · 2024</span>
-                      <span className="block text-white text-xl md:text-2xl mt-1" style={{ fontFamily: brand.serif }}>Тот самый вечер за 90 секунд</span>
-                    </span>
-                  </button>
-                )}
+              <button
+                onClick={() => setVideoOpen(true)}
+                aria-label="Смотреть видео"
+                className="relative block w-full mx-auto max-w-4xl aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black shadow-[0_40px_100px_-30px_rgba(0,0,0,0.8)] group">
+                {/* превью-кадр по центру в вертикальной ориентации, чтобы передавать формат видео */}
+                <div className="absolute inset-0 bg-[#0A0A0B]">
+                  <img src={VIDEO_POSTER} alt="Караоке Батл 2024 — постер"
+                       className="absolute inset-0 w-full h-full object-cover opacity-40 blur-xl scale-110" />
+                  <div className="absolute inset-0 grid place-items-center">
+                    <img src={VIDEO_POSTER} alt=""
+                         className="h-full aspect-[9/16] max-h-full object-cover rounded-2xl border border-white/10 shadow-2xl" />
+                  </div>
+                </div>
+                <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <span className="absolute inset-0 grid place-items-center">
+                  <span className="relative w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/10 backdrop-blur border border-white/20 grid place-items-center group-hover:scale-105 transition-transform">
+                    <span className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E11D48] to-[#9C1B3B] opacity-70 blur-lg" />
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="white" className="relative translate-x-0.5">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                </span>
+                <span className="absolute bottom-5 left-5 right-5 md:left-6 md:bottom-6 text-left">
+                  <span className="block text-[11px] tracking-[0.3em] uppercase text-[#F4D47A]/80">Караоке Батл · 2024</span>
+                  <span className="block text-white text-xl md:text-2xl mt-1" style={{ fontFamily: brand.serif }}>Тот самый вечер за 90 секунд</span>
+                </span>
+              </button>
+            </Reveal>
+
+            {/* фото — горизонтальные, с возможностью открыть крупнее */}
+            <div className="mt-12 md:mt-16">
+              <PhotoStrip photos={photos} aspect="aspect-[3/2]" width="landscape" caption="Листайте и нажимайте для увеличения" />
+            </div>
+          </div>
+
+          <Lightbox open={videoOpen} videoSrc={VIDEO_SRC} onClose={() => setVideoOpen(false)} />
+        </section>
+      );
+    };
+
+    /* ---------- ГДЕ БУДЕТ ПРОХОДИТЬ (Ресторан Zoloto) ---------- */
+    const Venue = () => {
+      const photos = useAutoPhotos(VENUE_FOLDER);
+      return (
+        <section id="venue" className="relative py-20 md:py-28 bg-white/[0.015]">
+          <div className="max-w-7xl mx-auto px-5 md:px-8">
+            <SectionTitle kicker="Где будет проходить мероприятие"
+              title={<>Ресторан <GradientText>Zoloto</GradientText></>} />
+
+            <Reveal>
+              <div className="mx-auto max-w-4xl grid md:grid-cols-[auto_1fr] gap-8 md:gap-12 items-center mb-12 md:mb-16">
+                <a href="https://2gis.ru/kazan/firm/70000001097248325" target="_blank" rel="noreferrer noopener"
+                   className="shrink-0 inline-flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition p-6 md:p-7">
+                  <img src="assets/logo_zoloto.svg" alt="Ресторан Zoloto" className="h-14 md:h-16 w-auto" />
+                </a>
+                <p className="text-white/75 leading-relaxed text-[15px] md:text-base">
+                  Zoloto — премиум-ресторан в Казани. Пространство в стиле фьюжн: величественые колонны,
+                  объёмные люстры, мягкие пастельные тона в сочетании с элементами золотого цвета, дизайнерская
+                  мебель и посуда. Фьюжн-меню из блюд разных кухонь мира. Каждый найдет то, что ему по душе.
+                </p>
               </div>
             </Reveal>
 
-            {/* карусель фото */}
-            <div className="mt-12 md:mt-16 relative">
-              <div className="flex items-end justify-between mb-5">
-                <div>
-                  <div className="text-[11px] tracking-[0.3em] uppercase text-[#F4D47A]/80">Фотохроника</div>
-                  <div className="mt-1 text-2xl md:text-3xl text-white" style={{ fontFamily: brand.serif }}>Листайте вправо</div>
-                </div>
-                <div className="hidden md:flex items-center gap-2">
-                  <button onClick={() => scrollBy(-1)} aria-label="Предыдущие фото"
-                          className="w-11 h-11 rounded-full border border-white/15 text-white/80 hover:text-white hover:border-white/35 transition grid place-items-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </button>
-                  <button onClick={() => scrollBy(1)} aria-label="Следующие фото"
-                          className="w-11 h-11 rounded-full border border-white/15 text-white/80 hover:text-white hover:border-white/35 transition grid place-items-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </button>
-                </div>
-              </div>
-
-              <div ref={scrollerRef}
-                   className="no-scrollbar flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-5 px-5 md:-mx-0 md:px-0">
-                {PHOTOS.map((src, i) => (
-                  <figure key={src}
-                          className="group shrink-0 snap-start relative overflow-hidden rounded-3xl border border-white/10 bg-[#141416] w-[78%] sm:w-[48%] md:w-[32%] lg:w-[28%] aspect-[4/5]">
-                    <img src={src} alt={`Караоке Батл 2024 · кадр ${i + 1}`}
-                         loading="lazy" decoding="async"
-                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
-                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
-                    <figcaption className="absolute left-4 bottom-3 text-[11px] tracking-[0.25em] uppercase text-white/70">
-                      #{String(i + 1).padStart(2, "0")} · 2024
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
-
-              {/* мобильные стрелки */}
-              <div className="flex md:hidden items-center justify-center gap-3 mt-3">
-                <button onClick={() => scrollBy(-1)} aria-label="Назад"
-                        className="w-10 h-10 rounded-full border border-white/15 text-white/80 grid place-items-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </button>
-                <button onClick={() => scrollBy(1)} aria-label="Вперёд"
-                        className="w-10 h-10 rounded-full border border-white/15 text-white/80 grid place-items-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </button>
-              </div>
-            </div>
+            <PhotoStrip photos={photos} aspect="aspect-[3/4]" width="portrait" caption="Интерьер и атмосфера" />
           </div>
         </section>
       );
@@ -977,6 +1119,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
               <a href="#tariffs"   className="hover:text-white">Тарифы</a>
               <a href="#programme" className="hover:text-white">Программа</a>
               <a href="#gallery"   className="hover:text-white">Как было</a>
+              <a href="#venue"     className="hover:text-white">Место</a>
               <a href="#team"      className="hover:text-white">Команда</a>
               <a href="#faq"       className="hover:text-white">FAQ</a>
               <a href="#booking"   className="hover:text-white">Бронь</a>
@@ -1012,6 +1155,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
             <Services />
             <Programme />
             <Gallery />
+            <Venue />
             <Team />
             <Testimonials />
             <FAQ />
@@ -1021,5 +1165,4 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
         </div>
       );
     }
-
 export default App;

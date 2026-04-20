@@ -3,12 +3,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 /**
  * Благотворительный Караоке Батл — Казань, 21 мая 2026
  * Drop-in React component. Requires Tailwind CSS in the host project.
- * Fonts used: 'Playfair Display', 'Manrope'.
- *
- * Все часто меняющиеся настройки — в объекте CONTACTS ниже.
- * Фотогалереи сами подтягивают файлы из папок assets/photos и assets/venue
- * (нужно соблюдать именование 01.jpg, 02.jpg и т.д.).
  */
+
 /* ---------- НАСТРОЙКИ, которые часто меняют ---------- */
     const CONTACTS = {
       phone:      "+7 (927) 440-78-74",
@@ -19,8 +15,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
       formEmail:  "89274407874@mail.ru",   // куда приходят заявки
       /* опционально: чтобы заявки падали в Telegram в личку, заведите бота у @BotFather
          и вставьте его токен и свой chat_id (получите у @userinfobot). */
-      tgBotToken: "",
-      tgChatId:   "",
+      tgBotToken: "8697010263:AAET5R3vCa16_4YCft5iyV-OWcE_V8rxmoc",
+      tgChatId:   "199252355",
     };
     /* Фотогалереи сами находят файлы в папках (01.jpg, 02.jpg, …). Чтобы
        обновить галерею — положите новые JPG с таким же именованием в
@@ -274,7 +270,6 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
                  className="w-9 h-9 grid place-items-center rounded-full border border-white/10 text-white/80 hover:text-white hover:border-white/30 transition"><IconTelegram width="16" height="16" /></a>
               <a href={CONTACTS.max} target="_blank" rel="noreferrer noopener" aria-label="MAX" title="MAX"
                  className="w-9 h-9 grid place-items-center rounded-full border border-white/10 text-white/80 hover:text-white hover:border-white/30 transition"><IconMax width="16" height="16" /></a>
-              <a href={`tel:${CONTACTS.phoneTel}`} className="text-sm text-white/80 hover:text-white hidden xl:inline">{CONTACTS.phone}</a>
               <CtaButton href="#booking">Участвовать</CtaButton>
             </div>
             <button className="lg:hidden p-2 text-white" aria-label="Меню" onClick={() => setOpen(!open)}>
@@ -390,11 +385,11 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
               </div>
               <div className="absolute left-5 bottom-5 right-5 md:left-6 md:bottom-6 md:right-auto md:max-w-[70%] rounded-2xl bg-black/50 backdrop-blur border border-white/10 p-4">
                 <div className="text-[11px] uppercase tracking-[0.25em] text-[#F4D47A]/80">Цель вечера</div>
-                <div className="mt-1 text-2xl md:text-3xl text-white" style={{ fontFamily: brand.serif }}>500 000 ₽ = 10 детей в семье</div>
+                <div className="mt-1 text-2xl md:text-3xl text-white" style={{ fontFamily: brand.serif }}>500 000 ₽ для детей — и вечер, который останется в сердце</div>
                 <div className="mt-3 h-1.5 rounded-full bg-white/10 overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-[#E11D48] to-[#F4D47A]" style={{ width: "41%" }} />
                 </div>
-                <div className="mt-2 text-xs text-white/60">Уже собрано: 204 000 ₽ на прошлом батле</div>
+                <div className="mt-2 text-xs text-white/60">Было собрано: 204 000 ₽ на прошлом батле</div>
               </div>
             </div>
           </Reveal>
@@ -533,6 +528,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
     const Programme = () => {
       const items = [
         { time: "19:00", title: "Открытие",        desc: "Красная дорожка, фуршет, фотозона, знакомство гостей." },
+        { time: "19:15", title: "Ведущий",         desc: "Приветствие от ведущего, фуршет, фотозона, знакомство гостей." },
         { time: "19:30", title: "Первый батл",     desc: "Выход участников на сцену. Живой бэк-вокал, судейство зала." },
         { time: "21:00", title: "Аукцион",         desc: "Лоты от спонсоров и AI-картины. Все средства уходят в фонд." },
         { time: "22:30", title: "Финал и итоги",   desc: "Объявление собранной суммы, награждение, afterparty." },
@@ -766,39 +762,112 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
     /* ---------- ОТЗЫВЫ ---------- */
     const Testimonials = () => {
       const reviews = [
+        { name: "Юлия Кузнецова", tag: "Участница караоке-батл 2024",
+          text: "Лиза, это было чудесно 🎂🎤🎁🎈🎉🎊 Очень люблю подобные мероприятия и осталась в восторге ❤️ Столько красивых, ярких, интересных и позитивных людей — это просто круть 🔥🔥🔥 Нужно почаще собираться такими компаниями. Вообще красотка, как ты всё профессионально организовала. Всё было на высшем уровне ❤️❤️❤️" },
+        { name: "Виктория Осипова", tag: "Участница караоке-батл 2024",
+          text: "Дорогая моя подруга 🙏 Космический человечек 🫶 Была я на разных масштабных мероприятиях, но никогда не испытывала такой огромный спектр эмоций, как ощутила вчера 🔥 Это было очень правильным твоим решением — отметить свой день рождения в таком формате, и мы были счастливы быть с тобой! Круг людей, который вчера собрался, давал просто сумасшедшую энергетику в зале, но самое важное — эта энергетика была сверхдобрая 🤩 Ты сделала очень благое богоугодное дело ‼️ И я знаю, что ты делаешь это постоянно. Помогаешь и незнакомым людям, и своим близким 🙏 Для меня лично и для нашей семьи ты тот человек, который помог мне когда-то в трудную минуту, когда я была в отчаянии. Именно ты сказала тогда: «Не плачь, сейчас всё решим!» — и сделала просто невозможное 🙏🥹❤️ Ты просто невероятная девушка, подруга, мама, партнёр, ну и будешь самой классной женой 😉 Пусть таких тёплых событий будет очень много в твоей жизни 🙏 Люблю тебя 😘" },
+        { name: "Йолдыз Саляхова", tag: "Участница караоке-батл 2024",
+          text: "Лиза! Я вчера, когда домой ехала, просто утопала в благодарности и ощущении счастья, что ты у меня есть — такая глубокая, живая, искренняя, настоящая, боевая подруга 😍🔥🚀 Мне было так хорошо — душа отдыхала, какие все невероятные, атмосфера добра, позитива 🙏🏽💣😘 Ты сделала мою неделю — лучшее событие! Хорошо, что я не пила — я всё запомнила 😂😂😂 Все лица, имена и слова — это очень важно 🥇🥇🥇 Ты это сделала! С днём рождения 🎉 Люблю и крепко обнимаю 🥰" },
         { name: "Марат И.", tag: "Меценат, 2024",
-          text: "Редкий случай, когда «благотворительность» — это не унылые речи, а реально крутая тусовка. Звук в Zoloto топовый. Приятно знать, что твой отдых закрыл счёт на лечение ребёнка. Советую брать билеты заранее — в прошлый раз мест не хватило." },
-        { name: "Елена В.", tag: "Участник",
-          text: "Очень переживала, что не умею петь, но формат максимально дружелюбный. Подпевали всем залом. Всё прозрачно: в конце вечера озвучили финальную сумму. Организация на уровне лучших закрытых клубов Москвы." },
+          text: "Редкий случай, когда благотворительность — это не унылые речи, а реально крутая тусовка. Звук в Zoloto топовый. Приятно знать, что твой отдых закрыл счёт на лечение ребёнка. Советую брать билеты заранее — в прошлый раз мест не хватило." },
+        { name: "Елена В.", tag: "Участница, 2024",
+          text: "Очень переживала, что не умею петь, но формат максимально дружелюбный — подпевали всем залом. Всё прозрачно: в конце вечера озвучили финальную сумму. Организация на уровне лучших закрытых клубов Москвы." },
         { name: "Артур М.", tag: "Зритель → Участник",
           text: "Чёткий тайминг, понятный дресс-код, никакой «воды». Пришёл ради нетворкинга — в итоге купил на аукционе картину ИИ и помог фонду. Для Казани это новый уровень ивентов." },
       ];
+      const [idx, setIdx] = useState(0);
+      const [paused, setPaused] = useState(false);
+      const touchStart = useRef(null);
+      const INTERVAL = 7000;
+      const n = reviews.length;
+      const go = (i) => setIdx(((i % n) + n) % n);
+      const next = () => go(idx + 1);
+      const prev = () => go(idx - 1);
+
+      useEffect(() => {
+        if (paused) return;
+        const t = setInterval(() => setIdx(i => (i + 1) % n), INTERVAL);
+        return () => clearInterval(t);
+      }, [paused, n]);
+
+      const onTouchStart = (e) => { touchStart.current = e.touches[0].clientX; };
+      const onTouchEnd = (e) => {
+        if (touchStart.current == null) return;
+        const dx = e.changedTouches[0].clientX - touchStart.current;
+        if (Math.abs(dx) > 40) { dx < 0 ? next() : prev(); }
+        touchStart.current = null;
+      };
+
       return (
         <section id="reviews" className="relative py-20 md:py-28">
-          <div className="max-w-7xl mx-auto px-5 md:px-8">
+          <div className="max-w-5xl mx-auto px-5 md:px-8">
             <SectionTitle kicker="Отзывы" title={<>Слова тех, кто уже <GradientText>пел с нами</GradientText></>} lead="Выжимки из отзывов после первого Караоке Батла в 2024 году." />
-            <div className="grid md:grid-cols-3 gap-6">
-              {reviews.map((r, i) => (
-                <Reveal key={r.name} delay={i * 120}>
-                  <figure className="relative h-full rounded-3xl p-7 md:p-8 border border-white/10 bg-gradient-to-b from-white/[0.03] to-white/[0.01]">
-                    <svg width="40" height="40" viewBox="0 0 40 40" className="text-[#E11D48]/70" aria-hidden fill="currentColor">
-                      <path d="M14 8c-5 0-9 4-9 9v15h12V19H9c0-4 2-6 5-6V8Zm20 0c-5 0-9 4-9 9v15h12V19h-8c0-4 2-6 5-6V8Z" />
-                    </svg>
-                    <div className="mt-4 flex gap-1 text-[#F4D47A]">
-                      {Array.from({length:5}).map((_,j)=>(
-                        <svg key={j} width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 2l2.95 6.97L22 10l-5.5 4.73L18 22l-6-3.78L6 22l1.5-7.27L2 10l7.05-1.03L12 2z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <blockquote className="mt-4 text-white/85 leading-relaxed text-[15.5px]">{r.text}</blockquote>
-                    <figcaption className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
-                      <div className="text-white" style={{ fontFamily: brand.serif, fontSize: "1.1rem" }}>{r.name}</div>
-                      <div className="text-xs tracking-[0.2em] uppercase text-[#F4D47A]/80">{r.tag}</div>
-                    </figcaption>
-                  </figure>
-                </Reveal>
-              ))}
+            <div
+              className="relative"
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
+              onFocus={() => setPaused(true)}
+              onBlur={() => setPaused(false)}
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
+              <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.03] to-white/[0.01]">
+                <div
+                  className="flex transition-transform duration-700 ease-out"
+                  style={{ transform: `translateX(-${idx * 100}%)` }}
+                >
+                  {reviews.map((r) => (
+                    <figure key={r.name} className="relative min-w-full p-7 md:p-10">
+                      <svg width="44" height="44" viewBox="0 0 40 40" className="text-[#E11D48]/70" aria-hidden fill="currentColor">
+                        <path d="M14 8c-5 0-9 4-9 9v15h12V19H9c0-4 2-6 5-6V8Zm20 0c-5 0-9 4-9 9v15h12V19h-8c0-4 2-6 5-6V8Z" />
+                      </svg>
+                      <div className="mt-4 flex gap-1 text-[#F4D47A]">
+                        {Array.from({length:5}).map((_,j)=>(
+                          <svg key={j} width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l2.95 6.97L22 10l-5.5 4.73L18 22l-6-3.78L6 22l1.5-7.27L2 10l7.05-1.03L12 2z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <blockquote className="mt-5 text-white/90 leading-relaxed text-[16px] md:text-[17px] whitespace-pre-line">{r.text}</blockquote>
+                      <figcaption className="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-white" style={{ fontFamily: brand.serif, fontSize: "1.15rem" }}>{r.name}</div>
+                        <div className="text-[11px] tracking-[0.2em] uppercase text-[#F4D47A]/80">{r.tag}</div>
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+
+              {/* Arrows */}
+              <button onClick={prev} aria-label="Предыдущий отзыв"
+                className="hidden md:grid place-items-center absolute left-[-18px] top-1/2 -translate-y-1/2 w-11 h-11 rounded-full border border-white/15 bg-[#0A0A0B]/80 backdrop-blur text-white/80 hover:text-white hover:border-white/40 transition">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button onClick={next} aria-label="Следующий отзыв"
+                className="hidden md:grid place-items-center absolute right-[-18px] top-1/2 -translate-y-1/2 w-11 h-11 rounded-full border border-white/15 bg-[#0A0A0B]/80 backdrop-blur text-white/80 hover:text-white hover:border-white/40 transition">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+
+              {/* Dots */}
+              <div className="mt-6 flex items-center justify-center gap-2">
+                {reviews.map((_, i) => (
+                  <button key={i} onClick={() => go(i)} aria-label={`Отзыв ${i+1}`}
+                    className={`h-2 rounded-full transition-all ${i === idx ? "w-8 bg-[#E11D48]" : "w-2 bg-white/25 hover:bg-white/50"}`} />
+                ))}
+              </div>
+
+              {/* Mobile arrows */}
+              <div className="md:hidden mt-4 flex items-center justify-between">
+                <button onClick={prev} aria-label="Предыдущий отзыв"
+                  className="grid place-items-center w-10 h-10 rounded-full border border-white/15 text-white/80 hover:text-white">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <div className="text-xs text-white/50 tracking-[0.15em]">{idx + 1} / {n}</div>
+                <button onClick={next} aria-label="Следующий отзыв"
+                  className="grid place-items-center w-10 h-10 rounded-full border border-white/15 text-white/80 hover:text-white">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -934,8 +1003,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
           <div className="max-w-7xl mx-auto px-5 md:px-8 grid lg:grid-cols-2 gap-10 md:gap-16">
             <div>
               <SectionTitle align="left" kicker="Бронь"
-                title={<>Всего 150 мест. <br /><GradientText>Осталось 42.</GradientText></>}
-                lead="Оставьте контакты — мы пришлём билет и гайд по дресс-коду в WhatsApp в течение 2 минут." />
+                title={<>Всего 150 мест. <br /><GradientText>Осталось 95.</GradientText></>}
+                lead="Оставьте заявку, после мы с Вами свяжемся. Или напишите в мессенджеры кодовое слово «Караоке-батл»." />
               <div className="mt-6 space-y-5">
                 <div className="rounded-2xl border border-white/10 p-5 bg-white/[0.02]">
                   <div className="text-[11px] tracking-[0.25em] uppercase text-[#F4D47A]/80">Когда</div>
@@ -1165,4 +1234,5 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
         </div>
       );
     }
+
 export default App;

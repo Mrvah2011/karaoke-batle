@@ -291,14 +291,7 @@
             <div className="hidden lg:flex items-center gap-7">
               {links.map(l => <a key={l.href} href={l.href} className="text-sm text-white/70 hover:text-white transition-colors">{l.label}</a>)}
             </div>
-            <div className="hidden md:flex items-center gap-3">
-              <a href={CONTACTS.whatsapp} target="_blank" rel="noreferrer noopener" aria-label="WhatsApp" title="WhatsApp"
-                 className="w-9 h-9 grid place-items-center rounded-full border border-white/10 text-white/80 hover:text-white hover:border-white/30 transition"><IconWhatsApp width="16" height="16" /></a>
-              <a href={CONTACTS.telegram} target="_blank" rel="noreferrer noopener" aria-label="Telegram" title="Telegram"
-                 className="w-9 h-9 grid place-items-center rounded-full border border-white/10 text-white/80 hover:text-white hover:border-white/30 transition"><IconTelegram width="16" height="16" /></a>
-              <a href={CONTACTS.max} target="_blank" rel="noreferrer noopener" aria-label="MAX" title="MAX"
-                 className="w-9 h-9 grid place-items-center rounded-full border border-white/10 text-white/80 hover:text-white hover:border-white/30 transition"><IconMax width="16" height="16" /></a>
-              <a href={`tel:${CONTACTS.phoneTel}`} className="text-sm text-white/80 hover:text-white hidden xl:inline">{CONTACTS.phone}</a>
+            <a href={`tel:${CONTACTS.phoneTel}`} className="text-sm text-white/80 hover:text-white hidden xl:inline">{CONTACTS.phone}</a>
               <CtaButton href="#booking">Участвовать</CtaButton>
             </div>
             <button className="lg:hidden p-2 text-white" aria-label="Меню" onClick={() => setOpen(!open)}>

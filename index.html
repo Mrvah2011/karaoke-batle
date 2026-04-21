@@ -993,34 +993,66 @@
           Сообщение: form.message || "—",
         };
 
-        try {
-          // 1) e-mail через FormSubmit.co (без бэкенда)
-          const res = await fetch(`https://formsubmit.co/ajax/${CONTACTS.formEmail}`, {
-            method:  "POST",
-            headers: { "Content-Type": "application/json", "Accept": "application/json" },
-            body:    JSON.stringify(payload),
-          });
-          if (!res.ok) throw new Error(`Mail ${res.status}`);
+        // Готовим текст для Telegram
+        const tgText =
+          `🎤 Новая заявка на Караоке Батл\n` +
+          `👤 ${form.name}\n📞 ${form.phone}\n🎟 ${form.tariff} · ${form.guests} гост.\n💰 ${total} ₽\n` +
+          (form.message ? `💬 ${form.message}` : "");
 
-          // 2) опционально — дубль в Telegram в личку @prostoeliza (нужны bot token и chat_id)
-          if (CONTACTS.tgBotToken && CONTACTS.tgChatId) {
-            const text =
-              `🎤 Новая заявка на Караоке Батл\n` +
-              `👤 ${form.name}\n📞 ${form.phone}\n🎟 ${form.tariff} · ${form.guests} гост.\n💰 ${total} ₽\n` +
-              (form.message ? `💬 ${form.message}` : "");
-            fetch(`https://api.telegram.org/bot${CONTACTS.tgBotToken}/sendMessage`, {
+        // 1) Telegram — используем application/x-www-form-urlencoded,
+        //    чтобы избежать CORS-preflight (OPTIONS), который может блокироваться.
+        const sendTelegram = async () => {
+          if (!CONTACTS.tgBotToken || !CONTACTS.tgChatId) return { ok: false, reason: "no-token" };
+          try {
+            const body = new URLSearchParams({
+              chat_id: String(CONTACTS.tgChatId),
+              text: tgText,
+              disable_web_page_preview: "true",
+            });
+            const r = await fetch(`https://api.telegram.org/bot${CONTACTS.tgBotToken}/sendMessage`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ chat_id: CONTACTS.tgChatId, text }),
-            }).catch(() => {});
+              body,
+            });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok || !j.ok) {
+              console.error("Telegram error:", r.status, j);
+              return { ok: false, reason: j.description || `HTTP ${r.status}` };
+            }
+            return { ok: true };
+          } catch (e) {
+            console.error("Telegram fetch failed:", e);
+            return { ok: false, reason: String(e) };
           }
+        };
 
+        // 2) e-mail через FormSubmit.co (без бэкенда)
+        const sendEmail = async () => {
+          try {
+            const r = await fetch(`https://formsubmit.co/ajax/${CONTACTS.formEmail}`, {
+              method:  "POST",
+              headers: { "Content-Type": "application/json", "Accept": "application/json" },
+              body:    JSON.stringify(payload),
+            });
+            if (!r.ok) {
+              console.error("FormSubmit error:", r.status);
+              return { ok: false, reason: `HTTP ${r.status}` };
+            }
+            return { ok: true };
+          } catch (e) {
+            console.error("FormSubmit fetch failed:", e);
+            return { ok: false, reason: String(e) };
+          }
+        };
+
+        // Отправляем оба канала параллельно, считаем успехом, если хоть один прошёл
+        const [tgRes, mailRes] = await Promise.all([sendTelegram(), sendEmail()]);
+
+        if (tgRes.ok || mailRes.ok) {
           setSent(true);
-        } catch (ex) {
+        } else {
           setErrMsg("Не удалось отправить форму. Напишите в WhatsApp — ответим сразу.");
-        } finally {
-          setSending(false);
         }
+        setSending(false);
       };
 
       const inputClass = (k) =>

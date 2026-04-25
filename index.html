@@ -407,7 +407,32 @@
       </section>
     );
 
-     /* ---------- PARTNERS (лого фонда) ---------- */
+    /* ---------- TRUST ---------- */
+    const TrustStrip = () => {
+      const items = [
+        { v: 204000, suffix: " ₽", label: "собрано за 3 часа в 2024 году" },
+        { v: 510, suffix: " ч.", label: "работы психологов с приёмными семьями" },
+        { v: 0, suffix: " %", label: "комиссии — каждый рубль уходит в фонд" },
+      ];
+      return (
+        <section className="relative py-16 md:py-20 border-y border-white/5 bg-white/[0.015]">
+          <div className="max-w-7xl mx-auto px-5 md:px-8 grid sm:grid-cols-3 gap-10 md:gap-6">
+            {items.map((it, i) => (
+              <Reveal key={i} delay={i * 120}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl text-white" style={{ fontFamily: brand.serif }}>
+                    <GradientText><Counter to={it.v} suffix={it.suffix} /></GradientText>
+                  </div>
+                  <div className="mt-3 text-white/60 text-sm md:text-base max-w-xs mx-auto">{it.label}</div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      );
+    };
+
+    /* ---------- PARTNERS (лого фонда) ---------- */
     const Partners = () => (
       <section className="relative py-14 md:py-16">
         <div className="max-w-5xl mx-auto px-5 md:px-8">
@@ -431,33 +456,6 @@
         </div>
       </section>
     );
-    
-    /* ---------- TRUST ---------- */
-    const TrustStrip = () => {
-      const items = [
-        { v: 55175, suffix: "", label: "людей поддержали проекты фонда" },
-        { v: 87128, suffix: "", label: "детей получили помощь" },
-         { v: 204 000, suffix: "", label: "собрали на караоке-батле 2024 и отправили детям" },
-        ];
-      return (
-        <section className="relative py-16 md:py-20 border-y border-white/5 bg-white/[0.015]">
-          <div className="max-w-7xl mx-auto px-5 md:px-8 grid sm:grid-cols-3 gap-10 md:gap-6">
-            {items.map((it, i) => (
-              <Reveal key={i} delay={i * 120}>
-                <div className="text-center">
-                  <div className="text-4xl md:text-5xl text-white" style={{ fontFamily: brand.serif }}>
-                    <GradientText><Counter to={it.v} suffix={it.suffix} /></GradientText>
-                  </div>
-                  <div className="mt-3 text-white/60 text-sm md:text-base max-w-xs mx-auto">{it.label}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-      );
-    };
-
-   
 
     /* ---------- ТАРИФЫ ---------- */
     const Services = () => {

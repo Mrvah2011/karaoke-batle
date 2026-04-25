@@ -1315,4 +1315,58 @@
           </div>
           <div className="text-sm text-white/60">
             <div className="text-[11px] tracking-[0.25em] uppercase text-[#F4D47A]/80 mb-3">Навигация</div>
-            <div cla
+            <div className="grid grid-cols-2 gap-2">
+              <a href="#tariffs"   className="hover:text-white">Тарифы</a>
+              <a href="#programme" className="hover:text-white">Программа</a>
+              <a href="#gallery"   className="hover:text-white">Как было</a>
+              <a href="#venue"     className="hover:text-white">Место</a>
+              <a href="#team"      className="hover:text-white">Команда</a>
+              <a href="#faq"       className="hover:text-white">FAQ</a>
+              <a href="#booking"   className="hover:text-white">Бронь</a>
+            </div>
+          </div>
+          <div className="text-sm text-white/60">
+            <div className="text-[11px] tracking-[0.25em] uppercase text-[#F4D47A]/80 mb-3">Контакты</div>
+            <div className="space-y-2">
+              <a href={`tel:${CONTACTS.phoneTel}`} className="flex items-center gap-2 hover:text-white"><IconPhone width="14" height="14" /> {CONTACTS.phone}</a>
+              <a href={CONTACTS.whatsapp} target="_blank" rel="noreferrer noopener" className="flex items-center gap-2 hover:text-white"><IconWhatsApp width="14" height="14" /> WhatsApp</a>
+              <a href={CONTACTS.telegram} target="_blank" rel="noreferrer noopener" className="flex items-center gap-2 hover:text-white"><IconTelegram width="14" height="14" /> Telegram</a>
+              <a href={CONTACTS.max}      target="_blank" rel="noreferrer noopener" className="flex items-center gap-2 hover:text-white"><IconMax width="14" height="14" /> MAX</a>
+              <div className="pt-1 text-white/50">Казань, ТЦ Coliseum, ул. Пушкина 29а</div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-5 md:px-8 mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-white/40">
+          <div>© 2026 Благотворительный Караоке Батл · Казань</div>
+          <div>Организатор: Елизавета Пронских · Партнёр: <a href="https://sgdeti.ru/" target="_blank" rel="noreferrer noopener" className="underline decoration-[#F4D47A]/40 hover:text-white">фонд «Солнечный город»</a></div>
+        </div>
+      </footer>
+    );
+
+    /* ---------- APP ---------- */
+    function App() {
+      return (
+        <div className="min-h-screen bg-[#0A0A0B] text-white antialiased selection:bg-[#E11D48] selection:text-white" style={{ fontFamily: brand.sans }}>
+          <Nav />
+          <main>
+            <Hero />
+            <TrustStrip />
+            <Partners />
+            <Services />
+            <Programme />
+            <Gallery />
+            <Venue />
+            <Team />
+            <Testimonials />
+            <FAQ />
+            <Booking />
+          </main>
+          <Footer />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

@@ -962,11 +962,21 @@
       /* ВАЖНО: используем стабильный setter и НЕ объявляем вложенный компонент <Field>,
          иначе React пересоздаёт input на каждом нажатии — курсор «теряется». */
       const set = useCallback((k) => (e) => {
-        const v = k === "guests" ? (Number(e.target.value) || 1) :
-                  k === "agree"  ? e.target.checked :
-                  e.target.value;
+        // Для guests храним сырое значение строкой — иначе нельзя стереть «1»
+        const v = k === "agree" ? e.target.checked : e.target.value;
         setForm((f) => ({ ...f, [k]: v }));
       }, []);
+
+      // Нормализуем количество гостей при потере фокуса (1..20)
+      const normalizeGuests = useCallback(() => {
+        setForm((f) => {
+          const n = Math.max(1, Math.min(20, parseInt(f.guests, 10) || 1));
+          return { ...f, guests: n };
+        });
+      }, []);
+
+      // Безопасное число гостей для расчётов (даже если в state временно пусто)
+      const guestsNum = Math.max(1, Math.min(20, parseInt(form.guests, 10) || 1));
 
       const validate = () => {
         const e = {};
@@ -976,13 +986,15 @@
         return e;
       };
 
-      const total = (form.tariff === "Зритель" ? 2000 : form.tariff === "Участник" ? 3500 : 15000) * form.guests;
+      const total = (form.tariff === "Зритель" ? 2000 : form.tariff === "Участник" ? 3500 : 15000) * guestsNum;
 
       const onSubmit = async (ev) => {
         ev.preventDefault();
         const e = validate();
         setErr(e);
         if (Object.keys(e).length) return;
+        // Гарантируем, что в state стоит корректное число гостей
+        normalizeGuests();
         setSending(true);
         setErrMsg("");
 
@@ -991,7 +1003,7 @@
           Имя:     form.name,
           Телефон: form.phone,
           Тариф:   form.tariff,
-          Гостей:  form.guests,
+          Гостей:  guestsNum,
           Итого:   `${total} ₽`,
           Сообщение: form.message || "—",
         };
@@ -999,7 +1011,7 @@
         // Готовим текст для Telegram
         const tgText =
           `🎤 Новая заявка на Караоке Батл\n` +
-          `👤 ${form.name}\n📞 ${form.phone}\n🎟 ${form.tariff} · ${form.guests} гост.\n💰 ${total} ₽\n` +
+          `👤 ${form.name}\n📞 ${form.phone}\n🎟 ${form.tariff} · ${guestsNum} гост.\n💰 ${total} ₽\n` +
           (form.message ? `💬 ${form.message}` : "");
 
         // 1) Telegram — используем application/x-www-form-urlencoded,
@@ -1169,9 +1181,13 @@
                         <span className="text-xs tracking-[0.2em] uppercase text-white/50">Гостей</span>
                         <input
                           type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           min={1} max={20}
                           value={form.guests}
                           onChange={set("guests")}
+                          onBlur={normalizeGuests}
+                          onFocus={(e) => e.target.select()}
                           className="mt-2 w-full bg-transparent border-b border-white/15 focus:border-[#F4D47A] py-3 text-white outline-none"
                         />
                       </label>
